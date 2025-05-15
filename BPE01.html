@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPE Tokenization Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .scene {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .scene h2 {
+            font-size: 18px;
+            color: #007bff;
+            margin: 0 0 10px 0;
+        }
+
+        .scene-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-area input {
+            padding: 8px;
+            font-size: 16px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .input-area button {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .input-area button:hover {
+            background-color: #0056b3;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 600px;
+            height: 100px;
+        }
+
+        .token-ids {
+            font-family: monospace;
+            font-size: 14px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .code-section {
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        .code-section h2 {
+            font-size: 18px;
+            color: #007bff;
+            margin: 0 0 10px 0;
+        }
+
+        .code-section pre {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 0;
+        }
+
+        .code-highlight {
+            background-color: #2d2d2d;
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .scene, .code-section {
+                width: 90%;
+            }
+
+            .input-area input {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>BPE Tokenization Animation</h1>
+
+    <div class="scene">
+        <h2>Scene 1: Highlighting Characters</h2>
+        <div class="scene-content">
+            <div class="input-area">
+                <input type="text" id="text-input" value="This is some text.<|endoftext|>" />
+                <button onclick="playScene1()">Play Animation</button>
+            </div>
+            <canvas id="scene1-canvas" width="600" height="100"></canvas>
+            <div class="token-ids" id="scene1-token-ids">Token IDs: []</div>
+        </div>
+    </div>
+
+    <div class="code-section">
+        <h2>Related Code</h2>
+        <pre id="code-block">
+<span id="line1">def encode(self, text, allowed_special=None):</span>
+<span id="line2">    import re</span>
+<span id="line3">    token_ids = []</span>
+<span id="line4">    # If special token handling is enabled</span>
+<span id="line5">    if allowed_special is not None and len(allowed_special) > 0:</span>
+<span id="line6">        special_pattern = (</span>
+<span id="line7">            "(" + "|".join(re.escape(tok) for tok in sorted(allowed_special, key=len, reverse=True)) + ")"</span>
+<span id="line8">        )</span>
+<span id="line9">        ...</span>
+<span id="line10">    # Split text into tokens</span>
+<span id="line11">    tokens = []</span>
+<span id="line12">    lines = text.split("\n")</span>
+<span id="line13">    for i, line in enumerate(lines):</span>
+<span id="line14">        if i > 0:</span>
+<span id="line15">            tokens.append("\n")</span>
+<span id="line16">        words = line.split()</span>
+<span id="line17">        for j, word in enumerate(words):</span>
+<span id="line18">            if j == 0 and i > 0:</span>
+<span id="line19">                tokens.append("Ġ" + word)</span>
+<span id="line20">            elif j == 0:</span>
+<span id="line21">                tokens.append(word)</span>
+<span id="line22">            else:</span>
+<span id="line23">                tokens.append("Ġ" + word)</span>
+<span id="line24">    ...</span>
+        </pre>
+    </div>
+
+    <script>
+        function playScene1() {
+            const canvas = document.getElementById('scene1-canvas');
+            const ctx = canvas.getContext('2d');
+            const textInput = document.getElementById('text-input').value;
+            const tokenIdsDiv = document.getElementById('scene1-token-ids');
+
+            // Clear canvas and reset token IDs
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            tokenIdsDiv.textContent = 'Token IDs: []';
+
+            // Animation parameters
+            const chars = textInput.split('');
+            const tokenIds = Array.from(new TextEncoder().encode(textInput)); // UTF-8 byte encoding
+            let currentIndex = 0;
+            const highlightDuration = 500; // ms per character
+            const fontSize = 20;
+            const xOffset = 10;
+            const yOffset = 50;
+
+            // Code lines to highlight
+            const codeLines = [
+                'line11', // tokens = []
+                'line12', // lines = text.split("\n")
+                'line16', // words = line.split()
+                'line19', // tokens.append("Ġ" + word)
+                'line21', // tokens.append(word)
+                'line23'  // tokens.append("Ġ" + word)
+            ];
+
+            // Reset code highlights
+            codeLines.forEach(line => {
+                document.getElementById(line)?.classList.remove('code-highlight');
+            });
+
+            function animate() {
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw all characters
+                let x = xOffset;
+                ctx.font = `${fontSize}px Arial`;
+                for (let i = 0; i < chars.length; i++) {
+                    ctx.fillStyle = i === currentIndex ? '#007bff' : '#333';
+                    ctx.fillText(chars[i], x, yOffset);
+                    x += ctx.measureText(chars[i]).width;
+                }
+
+                // Draw token ID below current character
+                if (currentIndex < chars.length) {
+                    const charWidth = ctx.measureText(chars[currentIndex]).width;
+                    const charX = xOffset + chars.slice(0, currentIndex).reduce((sum, c) => sum + ctx.measureText(c).width, 0);
+                    ctx.fillStyle = '#007bff';
+                    ctx.font = '16px Arial';
+                    ctx.fillText(`ID: ${tokenIds[currentIndex]}`, charX, yOffset + 30);
+                }
+
+                // Update token IDs display
+                tokenIdsDiv.textContent = `Token IDs: [${tokenIds.slice(0, currentIndex + 1).join(', ')}]`;
+
+                // Highlight code line
+                if (currentIndex < codeLines.length) {
+                    document.getElementById(codeLines[currentIndex % codeLines.length])?.classList.add('code-highlight');
+                }
+
+                // Move to next character
+                currentIndex++;
+                if (currentIndex < chars.length) {
+                    setTimeout(animate, highlightDuration);
+                } else {
+                    // Ensure final token IDs display
+                    tokenIdsDiv.textContent = `Token IDs: [${tokenIds.join(', ')}]`;
+                }
+            }
+
+            // Start animation
+            animate();
+        }
+    </script>
+</body>
+</html>
