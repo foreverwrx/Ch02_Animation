@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token嵌入动画</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f5f7fa;
+        }
+        svg {
+            background-color: #ffffff;
+            border: 1px solid #d6e0f5;
+        }
+        .matrix-cell {
+            stroke: #6b7280;
+            stroke-width: 0.5;
+        }
+        .highlight {
+            fill: #bfdbfe !important;
+        }
+        .result {
+            fill: #60a5fa !important;
+        }
+        .token-text, .vector-text {
+            font-size: 12px;
+            fill: #374151;
+        }
+        button {
+            margin: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #3b82f6;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #2563eb;
+        }
+    </style>
+</head>
+<body>
+    <h1>Token嵌入动画</h1>
+    <button onclick="startAnimation()">播放动画</button>
+    <svg id="animation" width="800" height="800"></svg>
+
+    <script>
+        const svg = document.getElementById('animation');
+        const ns = 'http://www.w3.org/2000/svg';
+
+        // 嵌入矩阵：5个token，4维嵌入
+        const embeddingMatrix = [
+            [0.1, 0.2, 0.3, 0.4],
+            [0.5, 0.6, 0.7, 0.8],
+            [0.9, 1.0, 1.1, 1.2],
+            [1.3, 1.4, 1.5, 1.6],
+            [1.7, 1.8, 1.9, 2.0]
+        ];
+
+        // 要处理的Token ID
+        const tokenIds = [2, 3, 1];
+
+        // 动画延时
+        const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+        function createMatrix(x, y, rows, cols, cellSize, values, idPrefix) {
+            const group = document.createElementNS(ns, 'g');
+            for (let i = 0; i < rows; i++) {
+                for (let j = 0; j < cols; j++) {
+                    const rect = document.createElementNS(ns, 'rect');
+                    rect.setAttribute('x', x + j * cellSize);
+                    rect.setAttribute('y', y + i * cellSize);
+                    rect.setAttribute('width', cellSize);
+                    rect.setAttribute('height', cellSize);
+                    rect.setAttribute('fill', '#e5e7eb');
+                    rect.setAttribute('class', 'matrix-cell');
+                    rect.setAttribute('id', `${idPrefix}-${i}-${j}`);
+                    group.appendChild(rect);
+
+                    const text = document.createElementNS(ns, 'text');
+                    text.setAttribute('x', x + j * cellSize + cellSize / 2);
+                    text.setAttribute('y', y + i * cellSize + cellSize / 2 + 5);
+                    text.setAttribute('text-anchor', 'middle');
+                    text.setAttribute('class', 'vector-text');
+                    text.textContent = values[i][j].toFixed(1);
+                    group.appendChild(text);
+                }
+            }
+            svg.appendChild(group);
+            return group;
+        }
+
+        function createVector(x, y, size, values, idPrefix, isVertical = false) {
+            const group = document.createElementNS(ns, 'g');
+            for (let i = 0; i < values.length; i++) {
+                const rect = document.createElementNS(ns, 'rect');
+                if (isVertical) {
+                    rect.setAttribute('x', x);
+                    rect.setAttribute('y', y + i * size);
+                } else {
+                    rect.setAttribute('x', x + i * size);
+                    rect.setAttribute('y', y);
+                }
+                rect.setAttribute('width', size);
+                rect.setAttribute('height', size);
+                rect.setAttribute('fill', '#e5e7eb');
+                rect.setAttribute('class', 'matrix-cell');
+                rect.setAttribute('id', `${idPrefix}-${i}`);
+                group.appendChild(rect);
+
+                const text = document.createElementNS(ns, 'text');
+                if (isVertical) {
+                    text.setAttribute('x', x + size / 2);
+                    text.setAttribute('y', y + i * size + size / 2 + 5);
+                } else {
+                    text.setAttribute('x', x + i * size + size / 2);
+                    text.setAttribute('y', y + size / 2 + 5);
+                }
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('class', 'vector-text');
+                text.textContent = values[i];
+                group.appendChild(text);
+            }
+            svg.appendChild(group);
+            return group;
+        }
+
+        function createArrow(x1, y1, x2, y2) {
+            const arrow = document.createElementNS(ns, 'path');
+            const path = `M${x1},${y1} L${x2},${y2}`;
+            arrow.setAttribute('d', path);
+            arrow.setAttribute('stroke', '#3b82f6');
+            arrow.setAttribute('stroke-width', '2');
+            arrow.setAttribute('marker-end', 'url(#arrowhead)');
+            svg.appendChild(arrow);
+            return arrow;
+        }
+
+        function createText(x, y, content, id) {
+            const text = document.createElementNS(ns, 'text');
+            text.setAttribute('x', x);
+            text.setAttribute('y', y);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('class', 'vector-text');
+            text.setAttribute('id', id);
+            text.textContent = content;
+            svg.appendChild(text);
+            return text;
+        }
+
+        function initSVG() {
+            svg.innerHTML = '';
+            // 箭头定义
+            const defs = document.createElementNS(ns, 'defs');
+            const marker = document.createElementNS(ns, 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '7');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3.5');
+            marker.setAttribute('orient', 'auto');
+            const polygon = document.createElementNS(ns, 'polygon');
+            polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+            polygon.setAttribute('fill', '#3b82f6');
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+
+            // 嵌入矩阵
+            createMatrix(50, 50, 5, 4, 50, embeddingMatrix, 'embed');
+
+            // Token ID
+            const tokenGroup = document.createElementNS(ns, 'g');
+            tokenIds.forEach((id, i) => {
+                const text = document.createElementNS(ns, 'text');
+                text.setAttribute('x', 300 + i * 60);
+                text.setAttribute('y', 100);
+                text.setAttribute('class', 'token-text');
+                text.setAttribute('id', `token-${i}`);
+                text.textContent = `ID: ${id}`;
+                tokenGroup.appendChild(text);
+            });
+            svg.appendChild(tokenGroup);
+
+            // 结果向量
+            tokenIds.forEach((_, i) => {
+                createVector(300 + i * 60, 150, 50, [0, 0, 0, 0], `result-${i}`, true);
+            });
+
+            // One-hot编码
+            createVector(50, 450, 50, [0, 0, 1, 0, 0], 'onehot', true);
+
+            // 线性层权重
+            createMatrix(150, 450, 5, 4, 50, embeddingMatrix, 'linear');
+
+            // 乘法结果
+            createVector(350, 450, 50, [0, 0, 0, 0], 'mult-result', true);
+        }
+
+        async function animateEmbeddingLookup() {
+            for (let i = 0; i < tokenIds.length; i++) {
+                const tokenId = tokenIds[i];
+                // 高亮Token
+                const tokenText = document.getElementById(`token-${i}`);
+                tokenText.classList.add('highlight');
+                await delay(500);
+
+                // 高亮嵌入矩阵行
+                for (let j = 0; j < 4; j++) {
+                    const cell = document.getElementById(`embed-${tokenId}-${j}`);
+                    cell.classList.add('highlight');
+                }
+                await delay(500);
+
+                // 显示箭头
+                const arrow = createArrow(300 + i * 60, 120, 150, 75 + tokenId * 50);
+                await delay(500);
+
+                // 复制到结果
+                for (let j = 0; j < 4; j++) {
+                    const resultCell = document.getElementById(`result-${i}-${j}`);
+                    resultCell.classList.add('result');
+                    const text = resultCell.nextSibling;
+                    text.textContent = embeddingMatrix[tokenId][j].toFixed(1);
+                }
+                await delay(500);
+
+                // 重置高亮
+                tokenText.classList.remove('highlight');
+                for (let j = 0; j < 4; j++) {
+                    const cell = document.getElementById(`embed-${tokenId}-${j}`);
+                    cell.classList.remove('highlight');
+                }
+                svg.removeChild(arrow);
+                await delay(500);
+            }
+        }
+
+        async function animateOneHotMultiplication() {
+            const tokenId = tokenIds[0]; // 使用第一个Token ID演示
+            const oneHot = [0, 0, 1, 0, 0]; // One-hot向量
+
+            // 高亮One-hot向量中的每个元素
+            for (let i = 0; i < oneHot.length; i++) {
+                const cell = document.getElementById(`onehot-${i}`);
+                cell.classList.add('highlight');
+                await delay(500);
+
+                // 如果One-hot值为1，高亮对应的线性层行并显示乘法
+                if (oneHot[i] === 1) {
+                    // 高亮线性层对应行
+                    for (let j = 0; j < 4; j++) {
+                        const cell = document.getElementById(`linear-${i}-${j}`);
+                        cell.classList.add('highlight');
+                    }
+                    await delay(500);
+
+                    // 显示乘法过程
+                    for (let j = 0; j < 4; j++) {
+                        const oneHotCell = document.getElementById(`onehot-${i}`);
+                        const weightCell = document.getElementById(`linear-${i}-${j}`);
+                        const resultCell = document.getElementById(`mult-result-${j}`);
+                        const resultText = resultCell.nextSibling;
+
+                        // 显示计算公式
+                        const calcText = createText(250, 400, `1 × ${embeddingMatrix[i][j].toFixed(1)} = ${embeddingMatrix[i][j].toFixed(1)}`, `calc-text-${j}`);
+                        await delay(500);
+
+                        // 填充结果
+                        resultCell.classList.add('result');
+                        resultText.textContent = embeddingMatrix[i][j].toFixed(1);
+                        await delay(500);
+
+                        // 移除计算公式
+                        svg.removeChild(calcText);
+                    }
+
+                    // 重置线性层高亮
+                    for (let j = 0; j < 4; j++) {
+                        const cell = document.getElementById(`linear-${i}-${j}`);
+                        cell.classList.remove('highlight');
+                    }
+                }
+
+                // 重置One-hot高亮
+                cell.classList.remove('highlight');
+                await delay(500);
+            }
+        }
+
+        async function startAnimation() {
+            initSVG();
+            await animateEmbeddingLookup();
+            await delay(1000);
+            await animateOneHotMultiplication();
+        }
+    </script>
+</body>
+</html>
