@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BPE Tokenization Animation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        .scene {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 800px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .scene h2 {
+            font-size: 18px;
+            color: #007bff;
+            margin: 0 0 10px 0;
+        }
+
+        .scene-content {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .input-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-area input {
+            padding: 8px;
+            font-size: 16px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .input-area button {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .input-area button:hover {
+            background-color: #0056b3;
+        }
+
+        canvas {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            max-width: 600px;
+            height: 100px;
+        }
+
+        .regex-display {
+            font-family: monospace;
+            font-size: 14px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .token-ids {
+            font-family: monospace;
+            font-size: 14px;
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .code-section {
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+
+        .code-section h2 {
+            font-size: 18px;
+            color: #007bff;
+            margin: 0 0 10px 0;
+        }
+
+        .code-section pre {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 0;
+        }
+
+        .code-highlight {
+            background-color: #2d2d2d;
+            border-left: 3px solid #007bff;
+            padding-left: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .scene, .code-section {
+                width: 90%;
+            }
+
+            .input-area input {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>BPE Tokenization Animation</h1>
+
+    <div class="scene">
+        <h2>Scene 1: Highlighting Characters</h2>
+        <div class="scene-content">
+            <div class="input-area">
+                <input type="text" id="text-input" value="This is some text.<|endoftext|>" />
+                <button onclick="playScene1()">Play Animation</button>
+            </div>
+            <canvas id="scene1-canvas" width="600" height="100"></canvas>
+            <div class="token-ids" id="scene1-token-ids">Token IDs: []</div>
+        </div>
+    </div>
+
+    <div class="scene">
+        <h2>Scene 2: Regex Splitting</h2>
+        <div class="scene-content">
+            <div class="regex-display">Regex: r'(<|endoftext|>)'</div>
+            <div class="input-area">
+                <input type="text" id="text-input2" value="This is some text.<|endoftext|>" />
+                <button onclick="playScene2()">Play Animation</button>
+            </div>
+            <canvas id="scene2-canvas" width="600" height="100"></canvas>
+            <div class="token-ids" id="scene2-token-ids">Tokens: []</div>
+        </div>
+    </div>
+
+    <div class="scene">
+        <h2>Scene 3: BPE Merging</h2>
+        <div class="scene-content">
+            <div class="input-area">
+                <input type="text" id="text-input3" value="This is some text.<|endoftext|>" />
+                <button onclick="playScene3()">Play Animation</button>
+            </div>
+            <canvas id="scene3-canvas" width="600" height="100"></canvas>
+            <div class="token-ids" id="scene3-token-ids">Token IDs: []</div>
+        </div>
+    </div>
+
+    <div class="code-section">
+        <h2>Related Code</h2>
+        <pre id="code-block">
+<span id="line1">def encode(self, text, allowed_special=None):</span>
+<span id="line2">    import re</span>
+<span id="line3">    token_ids = []</span>
+<span id="line4">    # If special token handling is enabled</span>
+<span id="line5">    if allowed_special is not None and len(allowed_special) > 0:</span>
+<span id="line6">        special_pattern = (</span>
+<span id="line7">            "(" + "|".join(re.escape(tok) for tok in sorted(allowed_special, key=len, reverse=True)) + ")"</span>
+<span id="line8">        )</span>
+<span id="line9">        last_index = 0</span>
+<span id="line10">        for match in re.finditer(special_pattern, text):</span>
+<span id="line11">            prefix = text[last_index:match.start()]</span>
+<span id="line12">            token_ids.extend(self.encode(prefix, allowed_special=None))</span>
+<span id="line13">            special_token = match.group(0)</span>
+<span id="line14">            if special_token in self.inverse_vocab:</span>
+<span id="line15">            token_ids.append(self.inverse_vocab[special_token])</span>
+<span id="line16">            last_index = match.end()</span>
+<span id="line17">        text = text[last_index:]  # Remaining part</span>
+<span id="line18">        ...</span>
+<span id="line19">    # Split text into tokens</span>
+<span id="line20">    tokens = []</span>
+<span id="line21">    lines = text.split("\n")</span>
+<span id="line22">    for i, line in enumerate(lines):</span>
+<span id="line23">        if i > 0:</span>
+<span id="line24">            tokens.append("\n")</span>
+<span id="line25">        words = line.split()</span>
+<span id="line26">        for j, word in enumerate(words):</span>
+<span id="line27">            if j == 0 and i > 0:</span>
+<span id="line28">                tokens.append("Ġ" + word)</span>
+<span id="line29">            elif j == 0:</span>
+<span id="line30">                tokens.append(word)</span>
+<span id="line31">            else:</span>
+<span id="line32">                tokens.append("Ġ" + word)</span>
+<span id="line33">    ...</span>
+<span id="line34">def tokenize_with_bpe(self, text):</span>
+<span id="line35">    symbols = list(text)</span>
+<span id="line36">    while True:</span>
+<span id="line37">        pairs = set(zip(symbols, symbols[1:]))</span>
+<span id="line38">        min_rank = float("inf")</span>
+<span id="line39">        bigram = None</span>
+<span id="line40">        for p in pairs:</span>
+<span id="line41">            r = self.bpe_ranks.get(p, float("inf"))</span>
+<span id="line42">            if r < min_rank:</span>
+<span id="line43">                min_rank = r</span>
+<span id="line44">                bigram = p</span>
+<span id="line45">        if bigram is None or bigram not in self.bpe_ranks:</span>
+<span id="line46">            break</span>
+<span id="line47">        first, second = bigram</span>
+<span id="line48">        new_symbols = []</span>
+<span id="line49">        i = 0</span>
+<span id="line50">        while i < len(symbols):</span>
+<span id="line51">            if i < len(symbols) - 1 and symbols[i] == first and symbols[i+1] == second:</span>
+<span id="line52">                new_symbols.append(first + second)</span>
+<span id="line53">                i += 2</span>
+<span id="line54">            else:</span>
+<span id="line55">                new_symbols.append(symbols[i])</span>
+<span id="line56">                i += 1</span>
+<span id="line57">        symbols = new_symbols</span>
+<span id="line58">    return symbols</span>
+        </pre>
+    </div>
+
+    <script>
+        // Scene 1: Highlighting Characters
+        function playScene1() {
+            const canvas = document.getElementById('scene1-canvas');
+            const ctx = canvas.getContext('2d');
+            const textInput = document.getElementById('text-input').value;
+            const tokenIdsDiv = document.getElementById('scene1-token-ids');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            tokenIdsDiv.textContent = 'Token IDs: []';
+
+            const chars = textInput.split('');
+            const tokenIds = Array.from(new TextEncoder().encode(textInput));
+            let currentIndex = 0;
+            const highlightDuration = 500;
+            const fontSize = 20;
+            const xOffset = 10;
+            const yOffset = 50;
+
+            const codeLines = ['line20', 'line21', 'line25', 'line28', 'line30', 'line32'];
+
+            codeLines.forEach(line => {
+                document.getElementById(line)?.classList.remove('code-highlight');
+            });
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                let x = xOffset;
+                ctx.font = `${fontSize}px Arial`;
+                for (let i = 0; i < chars.length; i++) {
+                    ctx.fillStyle = (i === currentIndex ? '#007bff' : '#333');
+                    ctx.fillText(chars[i], x, yOffset);
+                    x += ctx.measureText(chars[i]).width;
+                }
+
+                if (currentIndex < chars.length) {
+                    const charWidth = ctx.measureText(chars[currentIndex]).width;
+                    const charX = xOffset + chars.slice(0, currentIndex).reduce((sum, c) => sum + ctx.measureText(c).width, 0);
+                    ctx.fillStyle = '#007bff';
+                    ctx.font = '16px Arial';
+                    ctx.fillText(`ID: ${tokenIds[currentIndex]}`, charX, yOffset + 30);
+                }
+
+                tokenIdsDiv.textContent = `Token IDs: [${tokenIds.slice(0, currentIndex + 1).join(', ')}]`;
+
+                if (currentIndex < codeLines.length) {
+                    document.getElementById(codeLines[currentIndex % codeLines.length])?.classList.add('code-highlight');
+                }
+
+                currentIndex++;
+                if (currentIndex < chars.length) {
+                    setTimeout(animate, highlightDuration);
+                } else {
+                    tokenIdsDiv.textContent = `Token IDs: [${tokenIds.join(', ')}]`;
+                }
+            }
+
+            animate();
+        }
+
+        // Scene 2: Regex Splitting
+        function playScene2() {
+            const canvas = document.getElementById('scene2-canvas');
+            const ctx = canvas.getContext('2d');
+            const textInput = document.getElementById('text-input2').value;
+            const tokensDiv = document.getElementById('scene2-token-ids');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            tokensDiv.textContent = 'Tokens: []';
+
+            const specialTokens = ['<|endoftext|>'];
+            const regex = new RegExp('(' + specialTokens.map(t => t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')).join('|') + ')', 'g');
+            const matches = [...textInput.matchAll(regex)];
+            const segments = [];
+            let lastIndex = 0;
+
+            for (const match of matches) {
+                if (match.index > lastIndex) {
+                    segments.push({ text: textInput.slice(lastIndex, match.index), isSpecial: false });
+                }
+                segments.push({ text: match[0], isSpecial: true });
+                lastIndex = match.index + match[0].length;
+            }
+            if (lastIndex < textInput.length) {
+                segments.push({ text: textInput.slice(lastIndex), isSpecial: false });
+            }
+
+            const vocab = { 'This': 1212, 'Ġis': 318, 'Ġsome': 617, 'Ġtext': 2420, '.': 46, '<|endoftext|>': 257 };
+            const tokens = [];
+            const tokenIds = [];
+            segments.forEach(segment => {
+                if (segment.isSpecial) {
+                    tokens.push(segment.text);
+                    if (vocab[segment.text]) {
+                        tokenIds.push(vocab[segment.text]);
+                    }
+                } else {
+                    const words = segment.text.split(/\s+/).filter(w => w);
+                    words.forEach((word, i) => {
+                        const token = (i === 0 && segments.indexOf(segment) === 0) ? word : 'Ġ' + word;
+                        tokens.push(token);
+                        if (vocab[token]) {
+                            tokenIds.push(vocab[token]);
+                        }
+                    });
+                }
+            });
+
+            let currentSegment = 0;
+            const highlightDuration = 1000;
+            const fontSize = 20;
+            const xOffset = 10;
+            const yOffset = 50;
+
+            const codeLines = ['line5', 'line7', 'line10', 'line11', 'line12', 'line15'];
+
+            codeLines.forEach(line => {
+                document.getElementById(line)?.classList.remove('code-highlight');
+            });
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                let x = xOffset;
+                ctx.font = `${fontSize}px Arial`;
+                segments.forEach((seg, i) => {
+                    ctx.fillStyle = (i === currentSegment && seg.isSpecial) ? '#ff5555' : (i === currentSegment && !seg.isSpecial) ? '#007bff' : '#333';
+                    ctx.fillText(seg.text, x, yOffset);
+                    x += ctx.measureText(seg.text).width;
+                });
+
+                const currentTokens = tokens.slice(0, segments.slice(0, currentSegment + 1).reduce((sum, seg) => {
+                    if (seg.isSpecial) return sum + 1;
+                    return sum + seg.text.split(/\s+/).filter(w => w).length;
+                }, 0));
+                tokensDiv.textContent = `Tokens: [${currentTokens.map(t => `"${t}"`).join(', ')}]`;
+
+                if (currentSegment < codeLines.length) {
+                    document.getElementById(codeLines[currentSegment % codeLines.length])?.classList.add('code-highlight');
+                }
+
+                currentSegment++;
+                if (currentSegment < segments.length) {
+                    setTimeout(animate, highlightDuration);
+                } else {
+                    tokensDiv.textContent = `Tokens: [${tokens.map(t => `"${t}"`).join(', ')}]`;
+                    const tokenIdsDisplay = document.createElement('div');
+                    tokenIdsDisplay.className = 'token-ids';
+                    tokenIdsDisplay.textContent = `Token IDs: [${tokenIds.join(', ')}]`;
+                    document.querySelector('.scene-content:last-child').appendChild(tokenIdsDisplay);
+                }
+            }
+
+            animate();
+        }
+
+        // Scene 3: BPE Merging
+        function playScene3() {
+            const canvas = document.getElementById('scene3-canvas');
+            const ctx = canvas.getContext('2d');
+            const textInput = document.getElementById('text-input3').value;
+            const tokenIdsDiv = document.getElementById('scene3-token-ids');
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            tokenIdsDiv.textContent = 'Token IDs: []';
+
+            // Simulate token processing from Scene 2
+            const specialTokens = ['<|endoftext|>'];
+            const regex = new RegExp('(' + specialTokens.map(t => t.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&')).join('|') + ')', 'g');
+            const matches = [...textInput.matchAll(regex)];
+            const segments = [];
+            let lastIndex = 0;
+
+            for (const match of matches) {
+                if (match.index > lastIndex) {
+                    segments.push({ text: textInput.slice(lastIndex, match.index), isSpecial: false });
+                }
+                segments.push({ text: match[0], isSpecial: true });
+                lastIndex = match.index + match[0].length;
+            }
+            if (lastIndex < textInput.length) {
+                segments.push({ text: textInput.slice(lastIndex), isSpecial: false });
+            }
+
+            const tokens = [];
+            segments.forEach(segment => {
+                if (segment.isSpecial) {
+                    tokens.push(segment.text);
+                } else {
+                    const words = segment.text.split(/\s+/).filter(w => w);
+                    words.forEach((word, i) => {
+                        const token = (i === 0 && segments.indexOf(segment) === 0) ? word : 'Ġ' + word;
+                        tokens.push(token);
+                    });
+                }
+            });
+
+            // Focus on first token for animation (e.g., "This")
+            const focusToken = tokens[0]; // "This"
+            let symbols = focusToken.split(''); // ['T', 'h', 'i', 's']
+            const merges = [
+                { pair: ['T', 'h'], result: 'Th', id: 256, rank: 1 },
+                { pair: ['Th', 'i'], result: 'Thi', id: 424, rank: 2 },
+                { pair: ['Thi', 's'], result: 'This', id: 1212, rank: 3 }
+            ]; // Simplified merge rules
+            const finalVocab = { 'This': 1212, 'Ġis': 318, 'Ġsome': 617, 'Ġtext': 2420, '.': 46, '<|endoftext|>': 257 };
+            const finalTokenIds = tokens.map(t => finalVocab[t] || 0);
+
+            // Animation parameters
+            let mergeStep = -1; // Start with initial symbols
+            const highlightDuration = 1500;
+            const fontSize = 20;
+            const xOffset = 10;
+            const yOffset = 50;
+
+            // Code lines to highlight
+            const codeLines = ['line36', 'line37', 'line41', 'line44', 'line52', 'line57'];
+
+            codeLines.forEach(line => {
+                document.getElementById(line)?.classList.remove('code-highlight');
+            });
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Draw current symbols
+                let x = xOffset;
+                ctx.font = `${fontSize}px Arial`;
+                if (mergeStep === -1) {
+                    // Initial state: individual characters
+                    symbols.forEach((sym, i) => {
+                        ctx.fillStyle = '#333';
+                        ctx.fillText(sym, x, yOffset);
+                        x += ctx.measureText(sym).width;
+                    });
+                    ctx.font = '16px Arial';
+                    ctx.fillText(`Initial: [${symbols.join(', ')}]`, xOffset, yOffset + 30);
+                } else {
+                    // Merge steps
+                    const currentMerge = merges[mergeStep];
+                    const currentSymbols = mergeStep === merges.length ? [currentMerge.result] : symbols;
+                    currentSymbols.forEach((sym, i) => {
+                        ctx.fillStyle = (mergeStep < merges.length && i === currentSymbols.indexOf(currentMerge.pair[0]) || i === currentSymbols.indexOf(currentMerge.pair[1])) ? '#007bff' : '#333';
+                        ctx.fillText(sym, x, yOffset);
+                        x += ctx.measureText(sym).width);
+                    });
+                    ctx.font = '16px Arial';
+                    if (mergeStep < merges.length) {
+                        ctx.fillText(`Merge: ${currentMerge.pair[0]}+${currentMerge.pair[1]} → ${currentMerge.result} (ID: ${currentMerge.id})`, xOffset, yOffset + 30);
+                    } else {
+                        ctx.fillText(`Final: ${currentMerge.result} (ID: ${currentMerge.id})`, xOffset, yOffset + 30);
+                    }
+                }
+
+                // Update token IDs display
+                if (mergeStep >= merges.length) {
+                    tokenIdsDiv.textContent = `Token IDs: [${finalTokenIds.join(', ')}]`;
+                } else {
+                    tokenIdsDiv.textContent = `Token IDs: []`;
+                }
+
+                // Highlight code line
+                if (mergeStep + 1 < codeLines.length) {
+                    document.getElementById(codeLines[(mergeStep + 1) % codeLines.length])?.classList.add('code-highlight');
+                }
+
+                // Perform merge for next step
+                if (mergeStep < merges.length) {
+                    const currentMerge = merges[mergeStep];
+                    if (currentMerge) {
+                        const newSymbols = [];
+                        let i = 0;
+                        while (i < symbols.length) {
+                            if (i < symbols.length - 1 && symbols[i] === currentMerge.pair[0] && symbols[i + 1] === currentMerge.pair[1]) {
+                                newSymbols.push(currentMerge.result);
+                                i += 2;
+                            } else {
+                                newSymbols.push(symbols[i]);
+                                i++;
+                            }
+                        }
+                        symbols = newSymbols;
+                    }
+                }
+
+                // Move to next step
+                mergeStep++;
+                if (mergeStep <= merges.length) {
+                    setTimeout(animate, highlightDuration);
+                } else {
+                    tokenIdsDiv.textContent = `Token IDs: [${finalTokenIds.join(', ')}]`;
+                }
+            }
+
+            animate();
+        }
+    </script>
+</body>
+</html>
