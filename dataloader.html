@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DataLoader Animation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Highlight.js for code highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        /* Custom animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+        .highlight-token { background-color: #fefcbf; transition: background-color 0.5s; }
+        .tensor-box {
+            display: inline-block;
+            padding: 0.5rem;
+            margin: 0.2rem;
+            border: 1px solid #ccc;
+            border-radius: 0.25rem;
+            min-width: 120px;
+            text-align: center;
+        }
+        .batch-frame {
+            border: 2px dashed #3b82f6;
+            padding: 0.5rem;
+            display: inline-block;
+            border-radius: 0.5rem;
+            margin: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-6">DataLoader Animation</h1>
+
+        <!-- Scene 1: GPTDatasetV1 Batching -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 1: GPTDatasetV1 Batching (batch_size=8)</h2>
+            <div id="scene1" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="tensorList" class="text-lg mb-4"></div>
+                <div id="batchedTensors" class="text-lg mb-4"></div>
+                <button id="playScene1" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 2: DataLoader Iteration -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 2: DataLoader Iteration (shape [8, 4])</h2>
+            <div id="scene2" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="iterationDisplay" class="text-lg mb-4"></div>
+                <button id="playScene2" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 3: Shuffle and Stride Comparison -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 3: Shuffle and Stride Comparison</h2>
+            <div id="scene3" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="shuffleDisplay" class="text-lg mb-4"></div>
+                <div id="strideComparison" class="text-lg mb-4"></div>
+                <button id="playScene3" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Code Snippet -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Related Code</h2>
+            <pre><code id="codeBlock" class="python">
+from torch.utils.data import DataLoader, Dataset
+
+class GPTDatasetV1(Dataset):
+    def __init__(self, txt, tokenizer, max_length, stride):
+        self.input_ids = []
+        self.target_ids = []
+        token_ids = tokenizer.encode(txt)
+        for i in range(0, len(token_ids) - max_length, stride):
+            input_chunk = token_ids[i:i + max_length]
+            target_chunk = token_ids[i + 1:i + max_length + 1]
+            self.input_ids.append(input_chunk)
+            self.target_ids.append(target_chunk)
+    
+    def __getitem__(self, idx):
+        return self.input_ids[idx], self.target_ids[idx]
+
+dataloader = DataLoader(dataset, batch_size=8, shuffle=True)
+            </code></pre>
+        </div>
+    </div>
+
+    <script>
+        // Sample data: 10 input/target pairs (simplified for animation)
+        const inputTensors = [
+            [40, 367, 2885, 1464], [367, 2885, 1464, 1807], [2885, 1464, 1807, 284],
+            [1464, 1807, 284, 1399], [1807, 284, 1399, 400], [284, 1399, 400, 500],
+            [1399, 400, 500, 600], [400, 500, 600, 700], [500, 600, 700, 800],
+            [600, 700, 800, 900]
+        ];
+        const targetTensors = inputTensors.map((_, i) => inputTensors[(i + 1) % inputTensors.length]);
+        const batchSize = 8;
+
+        // Scene 1: GPTDatasetV1 Batching
+        document.getElementById('playScene1').addEventListener('click', () => {
+            const tensorList = document.getElementById('tensorList');
+            const batchedTensors = document.getElementById('batchedTensors');
+
+            // Show tensor list
+            tensorList.innerHTML = `Input Tensors:<br>` + inputTensors.map(tensor => 
+                `<span class="tensor-box">[${tensor.join(', ')}]</span>`
+            ).join('');
+            tensorList.classList.add('fade-in');
+
+            // Group into batches
+            setTimeout(() => {
+                const batches = [];
+                for (let i = 0; i < inputTensors.length; i += batchSize) {
+                    batches.push(inputTensors.slice(i, i + batchSize));
+                }
+                batchedTensors.innerHTML = `Batched Tensors (batch_size=8):<br>` + batches.map(batch => 
+                    `<span class="batch-frame">${batch.map(tensor => 
+                        `<span class="tensor-box highlight-token">[${tensor.join(', ')}]</span>`
+                    ).join('')}</span>`
+                ).join('');
+                batchedTensors.classList.add('fade-in');
+                batchedTensors.querySelectorAll('.batch-frame').forEach((frame, index) => {
+                    setTimeout(() => frame.classList.add('slide-in'), index * 500);
+                });
+            }, 1000);
+        });
+
+        // Scene 2: DataLoader Iteration
+        document.getElementById('playScene2').addEventListener('click', () => {
+            const iterationDisplay = document.getElementById('iterationDisplay');
+            iterationDisplay.innerHTML = '';
+
+            // Simulate two iterations
+            const batches = [
+                inputTensors.slice(0, batchSize),
+                inputTensors.slice(2, batchSize + 2)
+            ];
+            batches.forEach((batch, batchIndex) => {
+                setTimeout(() => {
+                    iterationDisplay.innerHTML = `Iteration ${batchIndex + 1} (shape [8, 4]):<br>` +
+                        `Input Batch:<br><span class="batch-frame">${batch.map(tensor => 
+                            `<span class="tensor-box highlight-token">[${tensor.join(', ')}]</span>`
+                        ).join('')}</span><br>` +
+                        `Target Batch:<br><span class="batch-frame">${batch.map((_, i) => 
+                            `<span class="tensor-box highlight-token">[${targetTensors[i + batchIndex * 2].join(', ')}]</span>`
+                        ).join('')}</span>`;
+                    iterationDisplay.classList.add('fade-in');
+                    iterationDisplay.querySelectorAll('.batch-frame').forEach(frame => {
+                        frame.classList.add('slide-in');
+                    });
+                }, batchIndex * 2000);
+            });
+        });
+
+        // Scene 3: Shuffle and Stride Comparison
+        document.getElementById('playScene3').addEventListener('click', () => {
+            const shuffleDisplay = document.getElementById('shuffleDisplay');
+            const strideComparison = document.getElementById('strideComparison');
+
+            // Show shuffled batches
+            const shuffledIndices = [2, 0, 1]; // Simplified shuffle
+            const shuffledBatches = shuffledIndices.map(i => inputTensors.slice(i * 2, i * 2 + batchSize));
+            shuffleDisplay.innerHTML = `Shuffled Batches (shuffle=True):<br>`;
+            shuffledBatches.forEach((batch, index) => {
+                setTimeout(() => {
+                    shuffleDisplay.innerHTML += `<span class="batch-frame">${batch.map(tensor => 
+                        `<span class="tensor-box highlight-token">[${tensor.join(', ')}]</span>`
+                    ).join('')}</span>`;
+                    shuffleDisplay.classList.add('fade-in');
+                    shuffleDisplay.querySelectorAll('.batch-frame')[index].classList.add('slide-in');
+                }, index * 1000);
+            });
+
+            // Compare stride=1 and stride=4
+            setTimeout(() => {
+                const stride1Tensors = inputTensors.slice(0, 3); // Overlapping
+                const stride4Tensors = [inputTensors[0], inputTensors[4]]; // Non-overlapping
+                strideComparison.innerHTML = `
+                    Stride=1 (Overlapping):<br>
+                    <span class="batch-frame">${stride1Tensors.map(tensor => 
+                        `<span class="tensor-box highlight-token">[${tensor.join(', ')}]</span>`
+                    ).join('')}</span><br>
+                    Stride=4 (Non-overlapping):<br>
+                    <span class="batch-frame">${stride4Tensors.map(tensor => 
+                        `<span class="tensor-box highlight-token">[${tensor.join(', ')}]</span>`
+                    ).join('')}</span>
+                `;
+                strideComparison.classList.add('fade-in');
+                strideComparison.querySelectorAll('.batch-frame').forEach(frame => {
+                    frame.classList.add('slide-in');
+                });
+            }, 4000);
+        });
+
+        // Highlight code
+        const codeBlock = document.getElementById('codeBlock');
+        const lines = codeBlock.innerHTML.split('\n');
+        lines[7] = `<span class="highlight-token">${lines[7]}</span>`;
+        lines[8] = `<span class="highlight-token">${lines[8]}</span>`;
+        lines[12] = `<span class="highlight-token">${lines[12]}</span>`;
+        codeBlock.innerHTML = lines.join('\n');
+        hljs.highlightElement(codeBlock);
+    </script>
+</body>
+</html>

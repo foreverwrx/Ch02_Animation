@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sliding Window Sampling Visualization</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9f9f9;
+      display: flex;
+      justify-content: center;
+      padding-top: 50px;
+    }
+
+    .sentence {
+      display: flex;
+      gap: 8px;
+      font-size: 20px;
+    }
+
+    .word {
+      padding: 5px 10px;
+      border-radius: 6px;
+      background: #eee;
+      color: #999;
+      transition: all 0.3s ease;
+    }
+
+    .input {
+      background: #d9ecff;
+      color: black;
+    }
+
+    .target {
+      background: #ffd6d6;
+      color: black;
+      border: 2px solid #333;
+    }
+
+    @keyframes slide {
+      0%  { --i: 0; }
+      14% { --i: 0; }
+      15% { --i: 1; }
+      29% { --i: 1; }
+      30% { --i: 2; }
+      43% { --i: 2; }
+      44% { --i: 3; }
+      57% { --i: 3; }
+      58% { --i: 4; }
+      71% { --i: 4; }
+      72% { --i: 5; }
+      85% { --i: 5; }
+      86% { --i: 6; }
+      100% { --i: 6; }
+    }
+
+    .sentence {
+      animation: slide 14s infinite;
+    }
+
+    .sentence .word {
+      background: #eee;
+      color: #999;
+    }
+
+    .sentence .word:nth-child(n + 1):nth-child(-n + calc(var(--i) + 1)) {
+      background: #d9ecff;
+      color: black;
+    }
+
+    .sentence .word:nth-child(calc(var(--i) + 2)) {
+      background: #ffd6d6;
+      color: black;
+      border: 2px solid #333;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="sentence">
+    <div class="word">LLMs</div>
+    <div class="word">learn</div>
+    <div class="word">to</div>
+    <div class="word">predict</div>
+    <div class="word">one</div>
+    <div class="word">word</div>
+    <div class="word">at</div>
+    <div class="word">a</div>
+    <div class="word">time</div>
+  </div>
+
+</body>
+</html>

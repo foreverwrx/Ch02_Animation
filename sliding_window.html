@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sliding Window Animation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Highlight.js for code highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        /* Custom animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideWindow {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .slide-window { animation: slideWindow 0.5s ease-out; }
+        .highlight-token { background-color: #fefcbf; }
+        .token-box {
+            display: inline-block;
+            padding: 0.5rem;
+            margin: 0.2rem;
+            border: 1px solid #ccc;
+            border-radius: 0.25rem;
+            min-width: 2.5rem;
+            text-align: center;
+        }
+        .window-frame {
+            border: 2px dashed #3b82f6;
+            padding: 0.5rem;
+            display: inline-block;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-6">Sliding Window Animation</h1>
+
+        <!-- Scene 1: Token ID Sequence with Window -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 1: Token ID Sequence with Window</h2>
+            <div id="scene1" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="tokenSequence" class="text-lg mb-4"></div>
+                <button id="playScene1" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 2: Sliding Window (stride=1) -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 2: Sliding Window (stride=1)</h2>
+            <div id="scene2" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="windowSequence" class="text-lg mb-4"></div>
+                <div id="inputOutput" class="text-lg mb-4"></div>
+                <button id="playScene2" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 3: Comparing stride=4 -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 3: Comparing stride=4</h2>
+            <div id="scene3" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="stride4Sequence" class="text-lg mb-4"></div>
+                <div id="stride4Output" class="text-lg mb-4"></div>
+                <button id="playScene3" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Code Snippet -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Related Code</h2>
+            <pre><code id="codeBlock" class="python">
+class GPTDatasetV1(Dataset):
+    def __init__(self, txt, tokenizer, max_length, stride):
+        self.input_ids = []
+        self.target_ids = []
+        token_ids = tokenizer.encode(txt)
+        for i in range(0, len(token_ids) - max_length, stride):
+            input_chunk = token_ids[i:i + max_length]
+            target_chunk = token_ids[i + 1:i + max_length + 1]
+            self.input_ids.append(input_chunk)
+            self.target_ids.append(target_chunk)
+    </code></pre>
+        </div>
+    </div>
+
+    <script>
+        const tokenIds = [40, 367, 2885, 1464, 1807, 284, 1399];
+        const maxLength = 4;
+        const stride1 = 1;
+        const stride4 = 4;
+
+        // Scene 1: Token ID Sequence with Window
+        document.getElementById('playScene1').addEventListener('click', () => {
+            const tokenSequence = document.getElementById('tokenSequence');
+            const tokensHtml = tokenIds.map((id, index) => {
+                if (index < maxLength) {
+                    return `<span class="token-box highlight-token">${id}</span>`;
+                }
+                return `<span class="token-box">${id}</span>`;
+            }).join('');
+            tokenSequence.innerHTML = `Token IDs: <span class="window-frame">${tokensHtml.slice(0, tokensHtml.indexOf('</span>') * maxLength + 7)}</span>${tokensHtml.slice(tokensHtml.indexOf('</span>') * maxLength + 7)}`;
+            tokenSequence.classList.add('fade-in');
+            tokenSequence.querySelector('.window-frame').classList.add('slide-window');
+        });
+
+        // Scene 2: Sliding Window (stride=1)
+        document.getElementById('playScene2').addEventListener('click', () => {
+            const windowSequence = document.getElementById('windowSequence');
+            const inputOutput = document.getElementById('inputOutput');
+
+            // Show initial sequence
+            windowSequence.innerHTML = `Token IDs: ${tokenIds.map(id => `<span class="token-box">${id}</span>`).join('')}`;
+            windowSequence.classList.add('fade-in');
+
+            // Slide window
+            setTimeout(() => {
+                const tokensHtml = tokenIds.map((id, index) => {
+                    if (index >= 1 && index <= maxLength) {
+                        return `<span class="token-box highlight-token">${id}</span>`;
+                    }
+                    return `<span class="token-box">${id}</span>`;
+                }).join('');
+                windowSequence.innerHTML = `Token IDs: <span class="window-frame">${tokensHtml.slice(tokensHtml.indexOf('</span>') + 7, tokensHtml.indexOf('</span>') * (maxLength + 1) + 7)}</span>${tokensHtml.slice(0, tokensHtml.indexOf('</span>') + 7)}${tokensHtml.slice(tokensHtml.indexOf('</span>') * (maxLength + 1) + 7)}`;
+                windowSequence.querySelector('.window-frame').classList.add('slide-window');
+            }, 1000);
+
+            // Show input and target
+            setTimeout(() => {
+                const inputChunk = [40, 367, 2885, 1464];
+                const targetChunk = [367, 2885, 1464, 1807];
+                inputOutput.innerHTML = `
+                    Input (x): ${inputChunk.map(id => `<span class="token-box">${id}</span>`).join('')}<br>
+                    Target (y): ${targetChunk.map(id => `<span class="token-box">${id}</span>`).join('')}
+                `;
+                inputOutput.classList.add('fade-in');
+            }, 2000);
+        });
+
+        // Scene 3: Comparing stride=4
+        document.getElementById('playScene3').addEventListener('click', () => {
+            const stride4Sequence = document.getElementById('stride4Sequence');
+            const stride4Output = document.getElementById('stride4Output');
+
+            // Show initial sequence with stride=4 window
+            const tokensHtml = tokenIds.map((id, index) => {
+                if (index < maxLength) {
+                    return `<span class="token-box highlight-token">${id}</span>`;
+                }
+                return `<span class="token-box">${id}</span>`;
+            }).join('');
+            stride4Sequence.innerHTML = `Token IDs: <span class="window-frame">${tokensHtml.slice(0, tokensHtml.indexOf('</span>') * maxLength + 7)}</span>${tokensHtml.slice(tokensHtml.indexOf('</span>') * maxLength + 7)}`;
+            stride4Sequence.classList.add('fade-in');
+
+            // Show non-overlapping window
+            setTimeout(() => {
+                const tokensHtml2 = tokenIds.map((id, index) => {
+                    if (index >= maxLength && index < maxLength * 2) {
+                        return `<span class="token-box highlight-token">${id}</span>`;
+                    }
+                    return `<span class="token-box">${id}</span>`;
+                }).join('');
+                stride4Sequence.innerHTML = `Token IDs: ${tokensHtml.slice(0, tokensHtml.indexOf('</span>') * maxLength + 7)}<span class="window-frame">${tokensHtml2.slice(tokensHtml2.indexOf('</span>') * maxLength + 7, tokensHtml2.indexOf('</span>') * (maxLength * 2) + 7)}</span>${tokensHtml2.slice(tokensHtml2.indexOf('</span>') * (maxLength * 2) + 7)}`;
+                stride4Sequence.querySelectorAll('.window-frame')[1].classList.add('slide-window');
+            }, 1000);
+
+            // Show output for stride=4
+            setTimeout(() => {
+                const inputChunk = [1807, 284, 1399];
+                stride4Output.innerHTML = `Input (x) with stride=4: ${inputChunk.map(id => `<span class="token-box">${id}</span>`).join('')}`;
+                stride4Output.classList.add('fade-in');
+            }, 2000);
+        });
+
+        // Highlight code
+        const codeBlock = document.getElementById('codeBlock');
+        const lines = codeBlock.innerHTML.split('\n');
+        lines[5] = `<span class="highlight-token">${lines[5]}</span>`;
+        lines[6] = `<span class="highlight-token">${lines[6]}</span>`;
+        codeBlock.innerHTML = lines.join('\n');
+        hljs.highlightElement(codeBlock);
+    </script>
+</body>
+</html>

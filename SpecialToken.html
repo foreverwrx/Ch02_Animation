@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Special Tokens Animation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Highlight.js for code highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        /* Custom animations */
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .slide-in { animation: slideIn 1s ease-out; }
+        .fade-in { animation: fadeIn 1s ease-in; }
+        .highlight-token { background-color: #fefcbf; transition: background-color 0.5s; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-6">Special Tokens Animation</h1>
+
+        <!-- Scene 1: Text Concatenation with <|endoftext|> -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 1: Concatenating Texts with &lt;|endoftext|&gt;</h2>
+            <div id="scene1" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="text1" class="text-lg">Hello, tea?</div>
+                <div id="eot" class="text-lg text-red-600 hidden">&lt;|endoftext|&gt;</div>
+                <div id="text2" class="text-lg">In the palace.</div>
+                <button id="playScene1" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 2: Vocabulary with Special Tokens -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 2: Adding Special Tokens to Vocabulary</h2>
+            <div id="scene2" class="bg-white p-6 rounded-lg shadow-md">
+                <table id="vocabTable" class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="p-2">Token</th>
+                            <th class="p-2">ID</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+                <button id="playScene2" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 3: Unknown Word Handling -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 3: Handling Unknown Words</h2>
+            <div id="scene3" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="inputText" class="text-lg mb-4">Hello, do you like tea?</div>
+                <div id="processedText" class="text-lg mb-4"></div>
+                <div id="tokenIds" class="text-lg mb-4"></div>
+                <button id="playScene3" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Interactive Input -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Interactive Input</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <input id="userInput" type="text" placeholder="Enter text to tokenize" class="w-full p-2 border rounded mb-4">
+                <button id="processInput" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Process Text</button>
+                <div id="interactiveOutput" class="mt-4 text-lg"></div>
+            </div>
+        </div>
+
+        <!-- Code Snippet -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Related Code</h2>
+            <pre><code id="codeBlock" class="python">
+all_tokens = sorted(list(set(preprocessed)))
+all_tokens.extend(["&lt;|endoftext|&gt;", "&lt;|unk|&gt;"])
+vocab = {token:integer for integer,token in enumerate(all_tokens)}
+
+class SimpleTokenizerV2:
+    def __init__(self, vocab):
+        self.str_to_int = vocab
+        self.int_to_str = {i:s for s,i in vocab.items()}
+    
+    def encode(self, text):
+        preprocessed = re.split(r'([,.:;?_!"()\']|--|\s)', text)
+        preprocessed = [item.strip() for item in preprocessed if item.strip()]
+        preprocessed = [
+            item if item in self.str_to_int 
+            else "&lt;|unk|&gt;" for item in preprocessed
+        ]
+        ids = [self.str_to_int[s] for s in preprocessed]
+        return ids
+            </code></pre>
+        </div>
+    </div>
+
+    <script>
+        // Sample vocabulary for demonstration
+        const vocab = {
+            'do': 355, 'you': 1126, 'like': 628, 'tea': 975, '?': 10,
+            'In': 55, 'the': 988, 'sunlit': 956, 'terraces': 984, 'of': 722, '.': 7,
+            '<|endoftext|>': 1130, '<|unk|>': 1131
+        };
+
+        // Scene 1: Concatenation Animation
+        document.getElementById('playScene1').addEventListener('click', () => {
+            const eot = document.getElementById('eot');
+            const text2 = document.getElementById('text2');
+            eot.classList.remove('hidden');
+            eot.classList.add('fade-in');
+            text2.classList.add('slide-in');
+            setTimeout(() => {
+                eot.classList.add('highlight-token');
+            }, 1000);
+        });
+
+        // Scene 2: Vocabulary Animation
+        const vocabTableBody = document.querySelector('#vocabTable tbody');
+        const vocabEntries = [
+            ['do', 355], ['you', 1126], ['like', 628], ['tea', 975], ['?', 10],
+            ['In', 55], ['the', 988], ['sunlit', 956], ['terraces', 984], ['of', 722], ['.', 7],
+            ['<|endoftext|>', 1130], ['<|unk|>', 1131]
+        ];
+        vocabEntries.forEach(([token, id]) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td class="p-2">${token}</td><td class="p-2">${id}</td>`;
+            vocabTableBody.appendChild(row);
+        });
+
+        document.getElementById('playScene2').addEventListener('click', () => {
+            const rows = vocabTableBody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                setTimeout(() => {
+                    row.classList.add('fade-in');
+                    if (index >= rows.length - 2) {
+                        row.classList.add('highlight-token');
+                    }
+                }, index * 300);
+            });
+        });
+
+        // Scene 3: Unknown Word Handling Animation
+        document.getElementById('playScene3').addEventListener('click', () => {
+            const inputText = document.getElementById('inputText');
+            const processedText = document.getElementById('processedText');
+            const tokenIds = document.getElementById('tokenIds');
+
+            // Step 1: Show tokenized text
+            const tokens = ['Hello', ',', 'do', 'you', 'like', 'tea', '?'];
+            processedText.innerHTML = 'Tokens: ' + tokens.map(t => `<span>${t}</span>`).join(' ');
+            processedText.classList.add('fade-in');
+
+            // Step 2: Replace unknown tokens
+            setTimeout(() => {
+                const spans = processedText.querySelectorAll('span');
+                spans.forEach((span, i) => {
+                    if (tokens[i] === 'Hello') {
+                        span.textContent = '<|unk|>';
+                        span.classList.add('highlight-token');
+                    }
+                });
+            }, 1000);
+
+            // Step 3: Show token IDs
+            setTimeout(() => {
+                const ids = tokens.map(t => t === 'Hello' ? 1131 : vocab[t]).filter(id => id !== undefined);
+                tokenIds.textContent = 'Token IDs: [' + ids.join(', ') + ']';
+                tokenIds.classList.add('fade-in');
+            }, 2000);
+        });
+
+        // Interactive Input
+        document.getElementById('processInput').addEventListener('click', () => {
+            const userInput = document.getElementById('userInput').value;
+            const outputDiv = document.getElementById('interactiveOutput');
+
+            // Simple tokenization (split by spaces and punctuation)
+            const tokens = userInput.split(/([,.:;?_!"()\']|--|\s)/).filter(t => t.trim());
+            const processedTokens = tokens.map(t => vocab[t] !== undefined ? t : '<|unk|>');
+            const tokenIds = processedTokens.map(t => vocab[t]);
+
+            outputDiv.innerHTML = `
+                <p class="mb-2">Tokens: ${processedTokens.join(' ')}</p>
+                <p>Token IDs: [${tokenIds.join(', ')}]</p>
+            `;
+            outputDiv.classList.add('fade-in');
+
+            // Highlight <|unk|> tokens
+            outputDiv.querySelectorAll('p').forEach(p => {
+                p.innerHTML = p.innerHTML.replace(/&lt;\|unk\|&gt;/g, '<span class="highlight-token">&lt;|unk|&gt;</span>');
+            });
+        });
+
+        // Highlight specific code lines
+        const codeBlock = document.getElementById('codeBlock');
+        const lines = codeBlock.innerHTML.split('\n');
+        lines[1] = `<span class="highlight-token">${lines[1]}</span>`;
+        lines[10] = `<span class="highlight-token">${lines[10]}</span>`;
+        codeBlock.innerHTML = lines.join('\n');
+        hljs.highlightElement(codeBlock);
+    </script>
+</body>
+</html>

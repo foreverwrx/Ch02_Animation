@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Builder Animation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Highlight.js for code highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        /* Custom animations */
+        @keyframes slideIn {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .highlight-token { background-color: #fefcbf; transition: background-color 0.5s; }
+        .token-box { 
+            display: inline-block; 
+            padding: 0.5rem; 
+            margin: 0.2rem; 
+            border: 1px solid #ccc; 
+            border-radius: 0.25rem; 
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-6">Vocabulary Builder Animation</h1>
+
+        <!-- Scene 1: Aggregating Unique Tokens -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 1: Aggregating Unique Tokens</h2>
+            <div id="scene1" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="tokenList" class="text-lg mb-4"></div>
+                <div id="uniqueTokens" class="text-lg mb-4"></div>
+                <button id="playScene1" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 2: Building Vocabulary Table -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 2: Building Vocabulary Table</h2>
+            <div id="scene2" class="bg-white p-6 rounded-lg shadow-md">
+                <table id="vocabTable" class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="p-2">Token</th>
+                            <th class="p-2">ID</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <button id="playScene2" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 3: Token to ID Mapping -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 3: Mapping Tokens to IDs</h2>
+            <div id="scene3" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="inputText" class="text-lg mb-4">I HAD</div>
+                <div id="tokenMapping" class="text-lg mb-4"></div>
+                <div id="tokenIds" class="text-lg mb-4"></div>
+                <button id="playScene3" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Interactive Lookup Tool -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Interactive Vocabulary Lookup</h2>
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <input id="userInput" type="text" placeholder="Enter a token (e.g., I, HAD)" class="w-full p-2 border rounded mb-4">
+                <button id="lookupToken" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Lookup Token</button>
+                <div id="lookupOutput" class="mt-4 text-lg"></div>
+            </div>
+        </div>
+
+        <!-- Code Snippet -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Related Code</h2>
+            <pre><code id="codeBlock" class="python">
+all_words = sorted(set(preprocessed))
+vocab = {token:integer for integer,token in enumerate(all_words)}
+            </code></pre>
+        </div>
+    </div>
+
+    <script>
+        // Sample preprocessed tokens and vocabulary
+        const preprocessed = ['I', 'HAD', 'always', 'I', 'thought', 'HAD', 'Jack'];
+        const vocab = {
+            'I': 44,
+            'HAD': 45,
+            'always': 123,
+            'thought': 789,
+            'Jack': 456
+        };
+
+        // Scene 1: Aggregating Unique Tokens
+        document.getElementById('playScene1').addEventListener('click', () => {
+            const tokenList = document.getElementById('tokenList');
+            const uniqueTokens = document.getElementById('uniqueTokens');
+
+            // Display initial token list
+            tokenList.innerHTML = 'Tokens: ' + preprocessed.map(t => `<span class="token-box">${t}</span>`).join('');
+            tokenList.classList.add('fade-in');
+
+            // Aggregate unique tokens
+            setTimeout(() => {
+                const unique = [...new Set(preprocessed)];
+                uniqueTokens.innerHTML = 'Unique Tokens: ' + unique.map(t => `<span class="token-box highlight-token">${t}</span>`).join('');
+                uniqueTokens.classList.add('fade-in');
+            }, 1000);
+        });
+
+        // Scene 2: Building Vocabulary Table
+        const vocabTableBody = document.querySelector('#vocabTable tbody');
+        const vocabEntries = Object.entries(vocab).sort((a, b) => a[1] - b[1]);
+        vocabEntries.forEach(([token, id]) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `<td class="p-2">${token}</td><td class="p-2">${id}</td>`;
+            vocabTableBody.appendChild(row);
+        });
+
+        document.getElementById('playScene2').addEventListener('click', () => {
+            const rows = vocabTableBody.querySelectorAll('tr');
+            rows.forEach((row, index) => {
+                setTimeout(() => {
+                    row.classList.add('fade-in');
+                    row.classList.add('highlight-token');
+                }, index * 300);
+            });
+        });
+
+        // Scene 3: Token to ID Mapping
+        document.getElementById('playScene3').addEventListener('click', () => {
+            const inputText = document.getElementById('inputText');
+            const tokenMapping = document.getElementById('tokenMapping');
+            const tokenIds = document.getElementById('tokenIds');
+
+            // Step 1: Show input tokens
+            const tokens = ['I', 'HAD'];
+            tokenMapping.innerHTML = 'Tokens: ' + tokens.map(t => `<span class="token-box">${t}</span>`).join(' ');
+            tokenMapping.classList.add('fade-in');
+
+            // Step 2: Show mapping to IDs
+            setTimeout(() => {
+                tokenMapping.innerHTML = 'Mapping: ' + tokens.map(t => `<span class="token-box">${t} → ${vocab[t]}</span>`).join(' ');
+                tokenMapping.querySelectorAll('span').forEach(span => span.classList.add('highlight-token'));
+            }, 1000);
+
+            // Step 3: Show final token IDs
+            setTimeout(() => {
+                const ids = tokens.map(t => vocab[t]);
+                tokenIds.textContent = 'Token IDs: [' + ids.join(', ') + ']';
+                tokenIds.classList.add('fade-in');
+            }, 2000);
+        });
+
+        // Interactive Lookup Tool
+        document.getElementById('lookupToken').addEventListener('click', () => {
+            const userInput = document.getElementById('userInput').value.trim();
+            const outputDiv = document.getElementById('lookupOutput');
+
+            if (!userInput) {
+                outputDiv.textContent = 'Please enter a token.';
+                return;
+            }
+
+            const id = vocab[userInput];
+            outputDiv.innerHTML = id !== undefined 
+                ? `Token: <span class="token-box highlight-token">${userInput}</span> → ID: ${id}`
+                : `Token: <span class="token-box">${userInput}</span> not found in vocabulary.`;
+            outputDiv.classList.add('fade-in');
+        });
+
+        // Highlight code
+        const codeBlock = document.getElementById('codeBlock');
+        const lines = codeBlock.innerHTML.split('\n');
+        lines[0] = `<span class="highlight-token">${lines[0]}</span>`;
+        lines[1] = `<span class="highlight-token">${lines[1]}</span>`;
+        codeBlock.innerHTML = lines.join('\n');
+        hljs.highlightElement(codeBlock);
+    </script>
+</body>
+</html>

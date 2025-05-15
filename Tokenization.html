@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tokenization Animation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Highlight.js for code highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        /* Custom animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes highlightChar {
+            0% { background-color: transparent; }
+            50% { background-color: #fefcbf; }
+            100% { background-color: transparent; }
+        }
+        @keyframes highlightToken {
+            from { background-color: transparent; }
+            to { background-color: #fefcbf; }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .highlight-char { animation: highlightChar 0.5s ease-in; }
+        .highlight-token { animation: highlightToken 0.5s ease-in; background-color: #fefcbf; }
+        .char-box {
+            display: inline-block;
+            padding: 0.2rem;
+            margin: 0.1rem;
+            border-radius: 0.25rem;
+        }
+        .token-box {
+            display: inline-block;
+            padding: 0.5rem;
+            margin: 0.2rem;
+            border: 1px solid #ccc;
+            border-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-6">Tokenization Animation</h1>
+
+        <!-- Scene 1: Highlighting Characters -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 1: Highlighting Characters</h2>
+            <div id="scene1" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="charDisplay" class="text-lg mb-4"></div>
+                <button id="playScene1" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 2: Regex Splitting -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 2: Regex Splitting</h2>
+            <div id="scene2" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="regexDisplay" class="text-lg mb-4 font-mono">Regex: r'([,.:;?_!&quot;\()\']|--|\s)'</div>
+                <div id="splitTokens" class="text-lg mb-4"></div>
+                <button id="playScene2" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 3: Filtering Empty Strings -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 3: Filtering Empty Strings</h2>
+            <div id="scene3" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="rawTokens" class="text-lg mb-4"></div>
+                <div id="filteredTokens" class="text-lg mb-4"></div>
+                <button id="playScene3" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Code Snippet -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Related Code</h2>
+            <pre><code id="codeBlock" class="python">
+import re
+
+text = "Hello, world. Is this-- a test?"
+preprocessed = re.split(r'([,.:;?_!"()\']|--|\s)', text)
+preprocessed = [item.strip() for item in preprocessed if item.strip()]
+            </code></pre>
+        </div>
+    </div>
+
+    <script>
+        const text = "Hello, world. Is this-- a test?";
+        const regex = /([,.:;?_!"'\(\)]|--|\s)/g;
+        const splitTokens = text.split(regex).filter(t => t !== undefined);
+        const filteredTokens = splitTokens.filter(t => t.trim());
+
+        // Scene 1: Highlighting Characters
+        document.getElementById('playScene1').addEventListener('click', () => {
+            const charDisplay = document.getElementById('charDisplay');
+            charDisplay.innerHTML = text.split('').map(c => `<span class="char-box">${c}</span>`).join('');
+            charDisplay.classList.add('fade-in');
+
+            const chars = charDisplay.querySelectorAll('span');
+            chars.forEach((char, index) => {
+                setTimeout(() => {
+                    char.classList.add('highlight-char');
+                }, index * 100);
+            });
+        });
+
+        // Scene 2: Regex Splitting
+        document.getElementById('playScene2').addEventListener('click', () => {
+            const splitTokensDiv = document.getElementById('splitTokens');
+            splitTokensDiv.innerHTML = 'Tokens: ' + splitTokens.map(t => `<span class="token-box">${t}</span>`).join(' ');
+            splitTokensDiv.classList.add('fade-in');
+
+            const tokens = splitTokensDiv.querySelectorAll('span');
+            tokens.forEach((token, index) => {
+                setTimeout(() => {
+                    if (token.textContent.match(regex)) {
+                        token.classList.add('highlight-token');
+                    }
+                }, index * 300);
+            });
+        });
+
+        // Scene 3: Filtering Empty Strings
+        document.getElementById('playScene3').addEventListener('click', () => {
+            const rawTokensDiv = document.getElementById('rawTokens');
+            const filteredTokensDiv = document.getElementById('filteredTokens');
+
+            // Show raw tokens
+            rawTokensDiv.innerHTML = 'Raw Tokens: ' + splitTokens.map(t => `<span class="token-box">${t}</span>`).join(' ');
+            rawTokensDiv.classList.add('fade-in');
+
+            // Filter empty strings
+            setTimeout(() => {
+                filteredTokensDiv.innerHTML = 'Filtered Tokens: ' + filteredTokens.map(t => `<span class="token-box highlight-token">${t}</span>`).join(' ');
+                filteredTokensDiv.classList.add('fade-in');
+
+                const rawTokens = rawTokensDiv.querySelectorAll('span');
+                rawTokens.forEach((token, index) => {
+                    if (!token.textContent.trim()) {
+                        token.style.textDecoration = 'line-through';
+                        token.style.color = 'red';
+                    }
+                });
+            }, 1000);
+        });
+
+        // Highlight code
+        const codeBlock = document.getElementById('codeBlock');
+        const lines = codeBlock.innerHTML.split('\n');
+        lines[3] = `<span class="highlight-token">${lines[3]}</span>`;
+        lines[4] = `<span class="highlight-token">${lines[4]}</span>`;
+        codeBlock.innerHTML = lines.join('\n');
+        hljs.highlightElement(codeBlock);
+    </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Embedding and Positional Encoding Animation</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Highlight.js for code highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <!-- Three.js for 3D visualization -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <style>
+        /* Custom animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .slide-in { animation: slideIn 0.5s ease-out; }
+        .highlight-token { background-color: #fefcbf; transition: background-color 0.5s; }
+        .token-box {
+            display: inline-block;
+            padding: 0.5rem;
+            margin: 0.2rem;
+            border: 1px solid #ccc;
+            border-radius: 0.25rem;
+            min-width: 2.5rem;
+            text-align: center;
+        }
+        .matrix-box {
+            display: inline-block;
+            padding: 0.5rem;
+            margin: 0.2rem;
+            border: 1px solid #ccc;
+            border-radius: 0.25rem;
+        }
+        #threeCanvas {
+            width: 100%;
+            height: 300px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold text-center mb-6">Embedding and Positional Encoding Animation</h1>
+
+        <!-- Scene 1: Token Embedding -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 1: Token Embedding</h2>
+            <div id="scene1" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="tokenIds" class="text-lg mb-4">Token IDs: [2, 3, 5, 1]</div>
+                <div id="embeddingMatrix" class="text-lg mb-4"></div>
+                <div id="embeddingVectors" class="text-lg mb-4"></div>
+                <button id="playScene1" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 2: Positional Encoding -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 2: Positional Encoding</h2>
+            <div id="scene2" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="positionIds" class="text-lg mb-4">Position IDs: [0, 1, 2, 3]</div>
+                <div id="posEmbeddingMatrix" class="text-lg mb-4"></div>
+                <div id="combinedEmbeddings" class="text-lg mb-4"></div>
+                <button id="playScene2" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Scene 3: 3D Shape Visualization -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Scene 3: Final Embedding Shape [8, 4, 256]</h2>
+            <div id="scene3" class="bg-white p-6 rounded-lg shadow-md">
+                <div id="threeCanvas"></div>
+                <div id="shapeInfo" class="text-lg mt-4"></div>
+                <button id="playScene3" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Play Animation</button>
+            </div>
+        </div>
+
+        <!-- Code Snippet -->
+        <div class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Related Code</h2>
+            <pre><code id="codeBlock" class="python">
+import torch
+import torch.nn as nn
+
+embedding_layer = nn.Embedding(vocab_size, output_dim)
+pos_embedding_layer = nn.Embedding(max_length, output_dim)
+input_ids = torch.tensor([2, 3, 5, 1])
+pos_ids = torch.arange(max_length)
+token_embeddings = embedding_layer(input_ids)
+pos_embeddings = pos_embedding_layer(pos_ids)
+input_embeddings = token_embeddings + pos_embeddings
+            </code></pre>
+        </div>
+    </div>
+
+    <script>
+        const tokenIds = [2, 3, 5, 1];
+        const embeddingMatrix = [
+            [0.1, 0.2, 0.3],
+            [0.4, 0.5, 0.6],
+            [0.7, 0.8, 0.9],
+            [1.0, 1.1, 1.2],
+            [1.3, 1.4, 1.5],
+            [1.6, 1.7, 1.8]
+        ];
+        const posIds = [0, 1, 2, 3];
+        const posEmbeddingMatrix = [
+            [0.01, 0.02, 0.03],
+            [0.04, 0.05, 0.06],
+            [0.07, 0.08, 0.09],
+            [0.10, 0.11, 0.12]
+        ];
+
+        // Scene 1: Token Embedding
+        document.getElementById('playScene1').addEventListener('click', () => {
+            const embeddingMatrixDiv = document.getElementById('embeddingMatrix');
+            const embeddingVectorsDiv = document.getElementById('embeddingVectors');
+
+            // Show embedding matrix
+            const matrixHtml = embeddingMatrix.map((row, index) => 
+                `<div class="matrix-box ${tokenIds.includes(index) ? 'highlight-token' : ''}">[${row.join(', ')}]</div>`
+            ).join('');
+            embeddingMatrixDiv.innerHTML = `Embedding Matrix:<br>${matrixHtml}`;
+            embeddingMatrixDiv.classList.add('fade-in');
+
+            // Show embedding vectors
+            setTimeout(() => {
+                const vectorsHtml = tokenIds.map(id => 
+                    `<div class="matrix-box highlight-token">[${embeddingMatrix[id].join(', ')}]</div>`
+                ).join('');
+                embeddingVectorsDiv.innerHTML = `Embedding Vectors:<br>${vectorsHtml}`;
+                embeddingVectorsDiv.classList.add('fade-in');
+                embeddingVectorsDiv.querySelectorAll('.matrix-box').forEach((box, index) => {
+                    setTimeout(() => box.classList.add('slide-in'), index * 300);
+                });
+            }, 1000);
+        });
+
+        // Scene 2: Positional Encoding
+        document.getElementById('playScene2').addEventListener('click', () => {
+            const posEmbeddingMatrixDiv = document.getElementById('posEmbeddingMatrix');
+            const combinedEmbeddingsDiv = document.getElementById('combinedEmbeddings');
+
+            // Show positional embedding matrix
+            const posMatrixHtml = posEmbeddingMatrix.map((row, index) => 
+                `<div class="matrix-box highlight-token">[${row.join(', ')}]</div>`
+            ).join('');
+            posEmbeddingMatrixDiv.innerHTML = `Positional Embedding Matrix:<br>${posMatrixHtml}`;
+            posEmbeddingMatrixDiv.classList.add('fade-in');
+
+            // Show combined embeddings
+            setTimeout(() => {
+                const combinedVectors = tokenIds.map((id, index) => {
+                    const tokenVec = embeddingMatrix[id];
+                    const posVec = posEmbeddingMatrix[index];
+                    return tokenVec.map((v, i) => (v + posVec[i]).toFixed(2));
+                });
+                const combinedHtml = combinedVectors.map(vec => 
+                    `<div class="matrix-box highlight-token">[${vec.join(', ')}]</div>`
+                ).join('');
+                combinedEmbeddingsDiv.innerHTML = `Combined Embeddings (Token + Positional):<br>${combinedHtml}`;
+                combinedEmbeddingsDiv.classList.add('fade-in');
+                combinedEmbeddingsDiv.querySelectorAll('.matrix-box').forEach((box, index) => {
+                    setTimeout(() => box.classList.add('slide-in'), index * 300);
+                });
+            }, 1000);
+        });
+
+        // Scene 3: 3D Shape Visualization
+        let scene, camera, renderer, cube;
+        function initThreeJS() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, 600 / 300, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('threeCanvas'), antialias: true });
+            renderer.setSize(600, 300);
+
+            const geometry = new THREE.BoxGeometry(8, 4, 2); // Represents [8, 4, 256] (scaled down)
+            const material = new THREE.MeshBasicMaterial({ color: 0x3b82f6, wireframe: true });
+            cube = new THREE.Mesh(geometry, material);
+            scene.add(cube);
+
+            camera.position.z = 15;
+        }
+
+        document.getElementById('playScene3').addEventListener('click', () => {
+            const shapeInfo = document.getElementById('shapeInfo');
+
+            // Initialize Three.js if not already
+            if (!scene) {
+                initThreeJS();
+            }
+
+            // Animate cube rotation
+            shapeInfo.innerHTML = `Shape: [8, 4, 256] (Batch, Sequence Length, Embedding Dim)`;
+            shapeInfo.classList.add('fade-in');
+
+            function animate() {
+                requestAnimationFrame(animate);
+                cube.rotation.x += 0.01;
+                cube.rotation.y += 0.01;
+                renderer.render(scene, camera);
+            }
+            animate();
+        });
+
+        // Highlight code
+        const codeBlock = document.getElementById('codeBlock');
+        const lines = codeBlock.innerHTML.split('\n');
+        lines[3] = `<span class="highlight-token">${lines[3]}</span>`;
+        lines[4] = `<span class="highlight-token">${lines[4]}</span>`;
+        lines[6] = `<span class="highlight-token">${lines[6]}</span>`;
+        lines[7] = `<span class="highlight-token">${lines[7]}</span>`;
+        codeBlock.innerHTML = lines.join('\n');
+        hljs.highlightElement(codeBlock);
+    </script>
+</body>
+</html>
